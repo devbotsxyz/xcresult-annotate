@@ -25,7 +25,11 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@actions/core": "^1.2.6"
+    "@actions/core": "^1.2.6",
+    "@actions/github": "^4.0.0",
+    "execa": "^4.0.3",
+    "simple-plist": "^1.1.1",
+    "simple-zstd": "^1.1.2"
   },
   "devDependencies": {
     "@types/jest": "^26.0.10",
