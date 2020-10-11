@@ -2719,13 +2719,14 @@ function run() {
                     }
                 }
                 if (annotations.length) {
+                    console.log('ANNOTATIONS: ', annotations);
                     const response = yield octokit.checks.create(Object.assign(Object.assign({}, context.repo), { name: 'Some Check', head_sha: context.sha, status: 'in_progress' }));
                     const check = response.data;
-                    yield octokit.checks.update(Object.assign(Object.assign({}, context.repo), { check_run_id: check.id, name: check.name, status: 'completed', conclusion: 'failure', output: {
+                    yield octokit.checks.update(Object.assign(Object.assign({}, context.repo), { check_run_id: check.id, name: check.name, status: 'completed', conclusion: 'neutral', output: {
                             title: 'Something something',
                             summary: 'This is a summary. Something something. Foo.',
                             text: 'This is some _markdown_ that can be `styled` I think?'
-                        }, annotation: annotations }));
+                        }, annotations }));
                 }
             }
         }

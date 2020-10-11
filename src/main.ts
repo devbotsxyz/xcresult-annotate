@@ -61,6 +61,8 @@ async function run(): Promise<void> {
       }
 
       if (annotations.length) {
+        console.log('ANNOTATIONS: ', annotations)
+
         const response = await octokit.checks.create({
           ...context.repo,
           name: 'Some Check',
@@ -75,13 +77,13 @@ async function run(): Promise<void> {
           check_run_id: check.id,
           name: check.name,
           status: 'completed',
-          conclusion: 'failure',
+          conclusion: 'neutral',
           output: {
             title: 'Something something',
             summary: 'This is a summary. Something something. Foo.',
             text: 'This is some _markdown_ that can be `styled` I think?'
           },
-          annotation: annotations
+          annotations
         })
       }
     }
