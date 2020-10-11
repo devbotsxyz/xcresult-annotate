@@ -43,17 +43,17 @@ async function run(): Promise<void> {
             const params = new URLSearchParams(url.href)
             core.info(`Annotating ${url.pathname} at line ${params.get('StartingLineNumber')}`)
 
-            const lineNumber = params.get('StartingLineNumber')
-            if (lineNumber) {
-              const annotation = [
-                {
-                  annotation_level: 'warning',
-                  message: warning.message,
-                  path: 'HelloTests/HelloTests.swift', // TODO Obviously
-                  start_line: lineNumber,
-                  end_line: lineNumber
-                }
-              ]
+            const startingLineNumber = params.get('StartingLineNumber')
+            const endingLineNumber = params.get('EndingLineNumber')
+
+            if (startingLineNumber && endingLineNumber) {
+              const annotation = {
+                annotation_level: 'warning',
+                message: warning.message,
+                path: 'HelloTests/HelloTests.swift', // TODO Obviously
+                start_line: parseInt(startingLineNumber),
+                end_line: parseInt(endingLineNumber)
+              }
               annotations.push(annotation)
             }
           }
