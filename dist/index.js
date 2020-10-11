@@ -2693,7 +2693,7 @@ function run() {
                 core.info(`We got ${warnings.length} warnings`);
                 const octokit = github.getOctokit(core.getInput('github-token', { required: true }));
                 const context = github.context;
-                const annotations = [];
+                const annotations = []; // ChecksUpdateParamsOutput
                 for (const warning of warnings) {
                     core.info(`${warning.issueType} - ${warning.message}`);
                     if (warning.issueType === 'Swift Compiler Warning') {
@@ -2721,11 +2721,13 @@ function run() {
                     console.log('ANNOTATIONS: ', annotations);
                     const response = yield octokit.checks.create(Object.assign(Object.assign({}, context.repo), { name: 'Some Check', head_sha: context.sha, status: 'in_progress' }));
                     const check = response.data;
+                    const xxx = annotations;
                     yield octokit.checks.update(Object.assign(Object.assign({}, context.repo), { check_run_id: check.id, name: check.name, status: 'completed', conclusion: 'neutral', output: {
                             title: 'Something something',
                             summary: 'This is a summary. Something something. Foo.',
-                            text: 'This is some _markdown_ that can be `styled` I think?'
-                        }, annotations }));
+                            text: 'This is some _markdown_ that can be `styled` I think?',
+                            annotations: xxx
+                        } }));
                 }
             }
         }

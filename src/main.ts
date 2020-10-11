@@ -22,6 +22,8 @@ import * as core from '@actions/core'
 import * as github from '@actions/github'
 import * as xcresult from './xcresult'
 
+export type AnnotationLevel = 'notice' | 'warning' | 'failure'
+
 async function run(): Promise<void> {
   try {
     const record = await xcresult.parse(core.getInput('result-bundle-path', {required: true}))
@@ -31,7 +33,7 @@ async function run(): Promise<void> {
 
       const octokit = github.getOctokit(core.getInput('github-token', {required: true}))
       const context = github.context
-      const annotations = []
+      const annotations = [] // ChecksUpdateParamsOutput
 
       for (const warning of warnings) {
         core.info(`${warning.issueType} - ${warning.message}`)
@@ -72,6 +74,8 @@ async function run(): Promise<void> {
 
         const check = response.data
 
+        const xxx: any = annotations // TODO Figure out how to get past that error
+
         await octokit.checks.update({
           ...context.repo,
           check_run_id: check.id,
@@ -81,9 +85,9 @@ async function run(): Promise<void> {
           output: {
             title: 'Something something',
             summary: 'This is a summary. Something something. Foo.',
-            text: 'This is some _markdown_ that can be `styled` I think?'
-          },
-          annotations
+            text: 'This is some _markdown_ that can be `styled` I think?',
+            annotations: xxx
+          }
         })
       }
     }
