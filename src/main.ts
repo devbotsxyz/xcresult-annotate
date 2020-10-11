@@ -1,3 +1,23 @@
+// MIT License - Copyright (c) 2020 Stefan Arentz <stefan@devbots.xyz>
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import * as xcresult from './xcresult'
@@ -8,6 +28,11 @@ async function run(): Promise<void> {
     const warnings = record.issues?.warningSummaries
     if (warnings) {
       core.info(`We got ${warnings.length} warnings`)
+
+      const octokit = github.getOctokit(core.getInput('github-token', {required: true}))
+      const context = github.context
+      const annotations = []
+
       for (const warning of warnings) {
         core.info(`${warning.issueType} - ${warning.message}`)
 
@@ -18,20 +43,9 @@ async function run(): Promise<void> {
             const params = new URLSearchParams(url.href)
             core.info(`Annotating ${url.pathname} at line ${params.get('StartingLineNumber')}`)
 
-            const octokit = github.getOctokit(core.getInput('github-token', {required: true}))
-
             const lineNumber = params.get('StartingLineNumber')
             if (lineNumber) {
-              const context = github.context
-
-              const response = await octokit.checks.create({
-                ...context.repo,
-                name: 'Some Check',
-                head_sha: context.sha,
-                status: 'in_progress'
-              })
-
-              const annotations = [
+              const annotation = [
                 {
                   annotation_level: 'warning',
                   message: warning.message,
@@ -40,25 +54,35 @@ async function run(): Promise<void> {
                   end_line: lineNumber
                 }
               ]
-
-              const check = response.data
-
-              await octokit.checks.update({
-                ...context.repo,
-                check_run_id: check.id,
-                name: check.name,
-                status: 'completed',
-                conclusion: 'failure',
-                output: {
-                  title: 'Something something',
-                  summary: 'This is a summary. Something something. Foo.',
-                  text: 'This is some _markdown_ that can be `styled` I think?'
-                },
-                annotation: annotations
-              })
+              annotations.push(annotation)
             }
           }
         }
+      }
+
+      if (annotations.length) {
+        const response = await octokit.checks.create({
+          ...context.repo,
+          name: 'Some Check',
+          head_sha: context.sha,
+          status: 'in_progress'
+        })
+
+        const check = response.data
+
+        await octokit.checks.update({
+          ...context.repo,
+          check_run_id: check.id,
+          name: check.name,
+          status: 'completed',
+          conclusion: 'failure',
+          output: {
+            title: 'Something something',
+            summary: 'This is a summary. Something something. Foo.',
+            text: 'This is some _markdown_ that can be `styled` I think?'
+          },
+          annotation: annotations
+        })
       }
     }
   } catch (error) {
