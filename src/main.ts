@@ -34,6 +34,7 @@ import * as xcresult from './xcresult'
 // &StartingLineNumber=23
 
 function normalizeIssuePathname(p: string): string {
+  console.log('PATH:', p)
   const components = p.split(path.delimiter)
   return components.slice(6).join(path.delimiter)
 }

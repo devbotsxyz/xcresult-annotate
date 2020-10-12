@@ -2693,6 +2693,7 @@ const xcresult = __importStar(__webpack_require__(975));
 // &StartingColumnNumber=12
 // &StartingLineNumber=23
 function normalizeIssuePathname(p) {
+    console.log('PATH:', p);
     const components = p.split(path.delimiter);
     return components.slice(6).join(path.delimiter);
 }
