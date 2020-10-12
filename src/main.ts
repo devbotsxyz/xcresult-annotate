@@ -18,11 +18,59 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+import * as path from 'path'
+
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import * as xcresult from './xcresult'
 
-export type AnnotationLevel = 'notice' | 'warning' | 'failure'
+// file:\/\/\/Users\/runner\/work\/example-ios-hello\/example-ios-hello\/HelloTests\/HelloTests.swift
+// CharacterRangeLen=0
+// &CharacterRangeLoc=685
+// &EndingColumnNumber=12
+// &EndingLineNumber=23
+// &LocationEncoding=1
+// &StartingColumnNumber=12
+// &StartingLineNumber=23
+
+function normalizeIssuePathname(p: string): string {
+  const components = p.split(path.delimiter)
+  return path.join(...components.slice(6))
+}
+
+function annotationFromIssueSummary(issue: xcresult.IssueSummary): any | null {
+  if (issue.issueType === 'Swift Compiler Warning') {
+    const documentLocation = issue.documentLocationInCreatingWorkspace
+    if (documentLocation) {
+      const url = new URL(documentLocation.url)
+      const params = new URLSearchParams(url.href)
+
+      const startingLineNumber = params.get('StartingLineNumber')
+      const endingLineNumber = params.get('EndingLineNumber')
+
+      if (startingLineNumber && endingLineNumber) {
+        const annotation: any = {
+          annotation_level: 'warning',
+          message: issue.message,
+          path: normalizeIssuePathname(url.pathname),
+          start_line: parseInt(startingLineNumber),
+          end_line: parseInt(endingLineNumber)
+        }
+
+        const startingColumnNumber = params.get('StartingColumnNumber')
+        const endingColumnNumber = params.get('EndingColumnNumber')
+
+        if (startingColumnNumber && endingColumnNumber) {
+          annotation.start_column = startingColumnNumber
+          annotation.end_column = endingColumnNumber
+        }
+
+        return annotation
+      }
+    }
+  }
+  return null
+}
 
 async function run(): Promise<void> {
   try {
@@ -37,28 +85,9 @@ async function run(): Promise<void> {
 
       for (const warning of warnings) {
         core.info(`${warning.issueType} - ${warning.message}`)
-
-        if (warning.issueType === 'Swift Compiler Warning') {
-          const documentLocation = warning.documentLocationInCreatingWorkspace
-          if (documentLocation) {
-            const url = new URL(documentLocation.url)
-            const params = new URLSearchParams(url.href)
-            core.info(`Annotating ${url.pathname} at line ${params.get('StartingLineNumber')}`)
-
-            const startingLineNumber = params.get('StartingLineNumber')
-            const endingLineNumber = params.get('EndingLineNumber')
-
-            if (startingLineNumber && endingLineNumber) {
-              const annotation = {
-                annotation_level: 'warning',
-                message: warning.message,
-                path: 'HelloTests/HelloTests.swift', // TODO Obviously
-                start_line: parseInt(startingLineNumber),
-                end_line: parseInt(endingLineNumber)
-              }
-              annotations.push(annotation)
-            }
-          }
+        const annotation = annotationFromIssueSummary(warning)
+        if (annotation) {
+          annotations.push(annotation)
         }
       }
 
@@ -74,19 +103,18 @@ async function run(): Promise<void> {
 
         const check = response.data
 
-        const xxx: any = annotations // TODO Figure out how to get past that error
+        // TODO This only takes 50 annotations per call
 
         await octokit.checks.update({
           ...context.repo,
           check_run_id: check.id,
           name: check.name,
           status: 'completed',
-          conclusion: 'neutral',
+          conclusion: 'neutral', // TODO Make this configurable?
           output: {
-            title: 'Something something',
+            title: 'Warnings',
             summary: 'This is a summary. Something something. Foo.',
-            text: 'This is some _markdown_ that can be `styled` I think?',
-            annotations: xxx
+            annotations: annotations as any // TODO Figure out how to get past that error
           }
         })
       }
