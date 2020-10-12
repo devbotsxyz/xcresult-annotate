@@ -2694,7 +2694,7 @@ const xcresult = __importStar(__webpack_require__(975));
 // &StartingLineNumber=23
 function normalizeIssuePathname(p) {
     const components = p.split(path.delimiter);
-    return path.join(...components.slice(6));
+    return components.slice(6).join(path.delimiter);
 }
 function annotationFromIssueSummary(issue) {
     if (issue.issueType === 'Swift Compiler Warning') {
@@ -2715,8 +2715,8 @@ function annotationFromIssueSummary(issue) {
                 const startingColumnNumber = params.get('StartingColumnNumber');
                 const endingColumnNumber = params.get('EndingColumnNumber');
                 if (startingColumnNumber && endingColumnNumber) {
-                    annotation.start_column = startingColumnNumber;
-                    annotation.end_column = endingColumnNumber;
+                    annotation.start_column = parseInt(startingColumnNumber);
+                    annotation.end_column = parseInt(endingColumnNumber);
                 }
                 return annotation;
             }

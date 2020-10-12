@@ -35,7 +35,7 @@ import * as xcresult from './xcresult'
 
 function normalizeIssuePathname(p: string): string {
   const components = p.split(path.delimiter)
-  return path.join(...components.slice(6))
+  return components.slice(6).join(path.delimiter)
 }
 
 function annotationFromIssueSummary(issue: xcresult.IssueSummary): any | null {
@@ -61,8 +61,8 @@ function annotationFromIssueSummary(issue: xcresult.IssueSummary): any | null {
         const endingColumnNumber = params.get('EndingColumnNumber')
 
         if (startingColumnNumber && endingColumnNumber) {
-          annotation.start_column = startingColumnNumber
-          annotation.end_column = endingColumnNumber
+          annotation.start_column = parseInt(startingColumnNumber)
+          annotation.end_column = parseInt(endingColumnNumber)
         }
 
         return annotation
