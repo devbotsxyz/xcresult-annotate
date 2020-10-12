@@ -2680,7 +2680,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const path = __importStar(__webpack_require__(622));
 const core = __importStar(__webpack_require__(186));
 const github = __importStar(__webpack_require__(438));
 const xcresult = __importStar(__webpack_require__(975));
@@ -2692,10 +2691,9 @@ const xcresult = __importStar(__webpack_require__(975));
 // &LocationEncoding=1
 // &StartingColumnNumber=12
 // &StartingLineNumber=23
-function normalizeIssuePathname(p) {
-    console.log('PATH:', p);
-    const components = p.split(path.delimiter);
-    return components.slice(6).join(path.delimiter);
+function relativeIssuePathname(p) {
+    const components = p.split('/');
+    return components.slice(6).join('/');
 }
 function annotationFromIssueSummary(issue) {
     if (issue.issueType === 'Swift Compiler Warning') {
@@ -2709,7 +2707,7 @@ function annotationFromIssueSummary(issue) {
                 const annotation = {
                     annotation_level: 'warning',
                     message: issue.message,
-                    path: normalizeIssuePathname(url.pathname),
+                    path: relativeIssuePathname(url.pathname),
                     start_line: parseInt(startingLineNumber),
                     end_line: parseInt(endingLineNumber)
                 };

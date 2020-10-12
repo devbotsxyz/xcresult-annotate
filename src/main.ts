@@ -18,8 +18,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-import * as path from 'path'
-
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import * as xcresult from './xcresult'
@@ -33,10 +31,9 @@ import * as xcresult from './xcresult'
 // &StartingColumnNumber=12
 // &StartingLineNumber=23
 
-function normalizeIssuePathname(p: string): string {
-  console.log('PATH:', p)
-  const components = p.split(path.delimiter)
-  return components.slice(6).join(path.delimiter)
+function relativeIssuePathname(p: string): string {
+  const components = p.split('/')
+  return components.slice(6).join('/')
 }
 
 function annotationFromIssueSummary(issue: xcresult.IssueSummary): any | null {
@@ -53,7 +50,7 @@ function annotationFromIssueSummary(issue: xcresult.IssueSummary): any | null {
         const annotation: any = {
           annotation_level: 'warning',
           message: issue.message,
-          path: normalizeIssuePathname(url.pathname),
+          path: relativeIssuePathname(url.pathname),
           start_line: parseInt(startingLineNumber),
           end_line: parseInt(endingLineNumber)
         }
